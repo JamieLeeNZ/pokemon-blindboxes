@@ -1,0 +1,45 @@
+name: Sync Private to Public
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - .github/workflows/sync-private-to-public.yml
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout private repository
+        uses: actions/checkout@v2
+        with:
+          repository: UOA-CS732-S1-2025/cs732-assignment-JamieLeeNZ
+          token: ${{ secrets.PRIVATE_REPO_TOKEN }}
+
+      - name: Set up Git
+        run: |
+          git config --global user.name "Jamie Lee"
+          git config --global user.email "126450738+eejl773@users.noreply.github.com"
+
+      - name: Add public repository remote
+        run: |
+          git remote add public https://github.com/JamieLeeNZ/pokemon-blindboxes.git
+
+      - name: Fetch latest changes from public repository
+        run: |
+          git fetch public main
+
+      - name: Rebase on top of public/main
+        run: |
+          git rebase public/main
+
+      - name: Push changes to public repository
+        env:
+          PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
+          PUBLIC_REPO_TOKEN: ${{ secrets.PUBLIC_REPO_TOKEN }}
+        run: |
+          git remote set-url origin https://UOA-CS732-S1-2025:${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/UOA-CS732-S1-2025/cs732-assignment-JamieLeeNZ.git
+          git remote set-url public https://JamieLeeNZ:${{ secrets.PUBLIC_REPO_TOKEN }}@github.com/JamieLeeNZ/pokemon-blindboxes.git
+          git push public main --force
